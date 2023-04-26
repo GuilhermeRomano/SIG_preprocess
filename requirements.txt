@@ -2,3 +2,4 @@ rasterio
 matplotlib
 numpy
 fiona
+wheel
