@@ -1,6 +1,6 @@
 # SIG Preprocess
 
-This project goal is to extract NDVI information to create a time sires for a specific farm.
+This project goal is to extract NDVI information to create a time series for a specific farm.
 
 ## Requirements
 
