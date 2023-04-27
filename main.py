@@ -67,7 +67,7 @@ def clip_image(path_to_file: str) -> None:
 def get_avg_ndvi(path_to_file: str) -> dict[str, str] | None:
     src = rasterio.open(path_to_file)
     band = src.read(1)
-    avg = np.average(band)
+    avg = np.nanmean(band)
 
     sample_results = {}
 
@@ -95,6 +95,8 @@ def main() -> None:
         clip_image(file_path)
 
     results = []
+    # Iterate over clipped images folder and get the mean value
+    # (ignoring any nan values that may appear)
     for filename in os.listdir(clip_path):
         file_path = os.path.join(clip_path, filename)
         sample_results = get_avg_ndvi(file_path)
