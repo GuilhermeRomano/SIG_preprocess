@@ -7,7 +7,7 @@ import csv
 
 DATA_FOLDER = "data"
 RAW_FOLDER = "IMAGENS_PLANET"
-NDVI_FOLDER = "nvdi_images"
+NDVI_FOLDER = "ndvi_images"
 CLIP_FOLDER = "clip_images"
 RESULT_FILE = "results.csv"
 GEO_NAME = "gleba01.geojson"
@@ -26,13 +26,13 @@ def extract_ndvi(path_to_file: str) -> None:
     ndvi = (band_nir.astype(float) - band_red.astype(float)) / (band_nir + band_red)
 
     # Set spatial characteristics of the output object to mirror the input
-    kwargs = src.meta
-    kwargs.update(dtype=rasterio.float32, count=1)
+    out_meta = src.meta
+    out_meta.update(dtype=rasterio.float32, count=1)
 
-    image_name = os.path.splitext(path_to_file)[0]
+    image_name = os.path.basename(path_to_file)
     # Create the file
     output_file = os.path.join(DATA_FOLDER, NDVI_FOLDER, image_name)
-    with rasterio.open(output_file, "w", **kwargs) as dst:
+    with rasterio.open(output_file, "w", **out_meta) as dst:
         dst.write_band(1, ndvi.astype(rasterio.float32))
     return None
 
@@ -56,7 +56,7 @@ def clip_image(path_to_file: str) -> None:
         }
     )
 
-    image_name = os.path.splitext(path_to_file)[0]
+    image_name = os.path.basename(path_to_file)
     output_file = os.path.join(DATA_FOLDER, CLIP_FOLDER, image_name)
 
     with rasterio.open(output_file, "w", **out_meta) as dest:
@@ -71,7 +71,7 @@ def get_avg_ndvi(path_to_file: str) -> dict[str, str] | None:
 
     sample_results = {}
 
-    image_name = os.path.splitext(path_to_file)[0]
+    image_name = os.path.basename(path_to_file)
     base_name = os.path.splitext(image_name)[0]
     sample_date = "_".join(base_name.split("_")[0:2])
 
@@ -83,18 +83,21 @@ def get_avg_ndvi(path_to_file: str) -> dict[str, str] | None:
 def main() -> None:
     raw_path = os.path.join(DATA_FOLDER, RAW_FOLDER)
     ndvi_path = os.path.join(DATA_FOLDER, NDVI_FOLDER)
-    clip_path = os.path.join(DATA_FOLDER, NDVI_FOLDER)
+    clip_path = os.path.join(DATA_FOLDER, CLIP_FOLDER)
     # Iterate over raw folder and save result images in ndvi folder
     for filename in os.listdir(raw_path):
-        extract_ndvi(filename)
+        file_path = os.path.join(raw_path, filename)
+        extract_ndvi(file_path)
 
     # Iterate over ndvi folder and save result images in clipped images folder
     for filename in os.listdir(ndvi_path):
-        clip_image(filename)
+        file_path = os.path.join(ndvi_path, filename)
+        clip_image(file_path)
 
     results = []
     for filename in os.listdir(clip_path):
-        sample_results = get_avg_ndvi(filename)
+        file_path = os.path.join(clip_path, filename)
+        sample_results = get_avg_ndvi(file_path)
         results.append(sample_results)
 
     output_file = os.path.join(DATA_FOLDER, "results.csv")
